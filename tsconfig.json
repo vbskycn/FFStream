@@ -11,11 +11,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "baseUrl": ".",
-    "paths": {
-      "*": ["*", "*.js", "*.ts"]
-    }
+    "moduleResolution": "node"
   },
   "include": [
     "src/**/*",
