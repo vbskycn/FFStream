@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import path from 'path';
 import ffmpegService from './services/ffmpeg.service';
 import storage from './services/storage.service';
@@ -9,24 +9,26 @@ console.log('初始化服务器...');
 
 // 中间件配置
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 // API 路由
-app.get('/api/streams', (req, res) => {
+app.get('/api/streams', (req: Request, res: Response) => {
   console.log('获取所有流列表');
   const streams = storage.getAllStreams();
   res.json(streams);
 });
 
-app.post('/api/streams', (req, res) => {
+app.post('/api/streams', async (req: Request, res: Response) => {
   try {
     console.log('收到新建流请求:', req.body);
     const stream = storage.addStream({
       name: req.body.name,
-      inputUrl: req.body.inputUrl,
-      outputKey: req.body.outputKey,
-      status: 'stopped'
+      inputUrl: req.body.inputUrl
     });
+    
+    // 自动启动新添加的流
+    await ffmpegService.startStream(stream.id);
+    
     res.status(201).json(stream);
   } catch (err: any) {
     console.error('创建流失败:', err);
@@ -34,7 +36,7 @@ app.post('/api/streams', (req, res) => {
   }
 });
 
-app.post('/api/streams/:id/start', async (req, res) => {
+app.post('/api/streams/:id/start', async (req: Request, res: Response) => {
   try {
     console.log('收到启动流请求:', req.params.id);
     await ffmpegService.startStream(req.params.id);
@@ -45,7 +47,7 @@ app.post('/api/streams/:id/start', async (req, res) => {
   }
 });
 
-app.post('/api/streams/:id/stop', async (req, res) => {
+app.post('/api/streams/:id/stop', async (req: Request, res: Response) => {
   try {
     console.log('收到停止流请求:', req.params.id);
     await ffmpegService.stopStream(req.params.id);
@@ -56,7 +58,7 @@ app.post('/api/streams/:id/stop', async (req, res) => {
   }
 });
 
-app.delete('/api/streams/:id', async (req, res) => {
+app.delete('/api/streams/:id', async (req: Request, res: Response) => {
   try {
     console.log('收到删除流请求:', req.params.id);
     await ffmpegService.stopStream(req.params.id);

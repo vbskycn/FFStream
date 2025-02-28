@@ -8,6 +8,7 @@ interface IStream {
   outputKey: string;
   status: 'running' | 'stopped' | 'error';
   lastError?: string;
+  retryCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,7 +18,7 @@ class StorageService {
   private streams: Map<string, IStream>;
 
   constructor() {
-    this.dataFile = path.join(__dirname, '../../data/streams.json');
+    this.dataFile = path.join(process.cwd(), 'data/streams.json');
     this.streams = new Map();
     this.init();
   }
@@ -45,7 +46,6 @@ class StorageService {
     try {
       const data = Object.fromEntries(this.streams);
       fs.writeFileSync(this.dataFile, JSON.stringify(data, null, 2));
-      console.log('流配置数据已保存到文件');
     } catch (err) {
       console.error('保存流配置数据失败:', err);
     }
@@ -59,11 +59,14 @@ class StorageService {
     return this.streams.get(id);
   }
 
-  addStream(stream: Omit<IStream, 'id' | 'createdAt' | 'updatedAt'>): IStream {
+  addStream(stream: Pick<IStream, 'name' | 'inputUrl'>): IStream {
     const id = Date.now().toString();
     const newStream: IStream = {
       ...stream,
       id,
+      outputKey: `stream_${id}`,  // 自动生成outputKey
+      status: 'stopped',
+      retryCount: 0,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -83,7 +86,6 @@ class StorageService {
       };
       this.streams.set(id, updatedStream);
       this.save();
-      console.log('更新流:', updatedStream.name, '状态:', updatedStream.status);
       return updatedStream;
     }
     return undefined;
