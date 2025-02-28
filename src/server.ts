@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import path from 'path';
-import config from '../config/default.js';
+import config from '../config/default';
 import Stream from './models/stream.model';
 import ffmpegService from './services/ffmpeg.service';
 
