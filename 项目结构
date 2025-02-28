@@ -1,0 +1,16 @@
+FFStream/
+├── config/
+│   └── default.js
+├── src/
+│   ├── public/
+│   │   ├── css/
+│   │   ├── js/
+│   │   └── index.html
+│   ├── services/
+│   │   └── ffmpeg.service.ts
+│   ├── models/
+│   │   └── stream.model.ts
+│   └── server.ts
+├── package.json
+├── tsconfig.json
+└── readme.html 
