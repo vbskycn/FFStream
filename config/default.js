@@ -5,8 +5,7 @@ module.exports = {
     port: process.env.PORT || 3000
   },
   stream: {
-    pushServer: 'rtmp://ali.push.yximgs.com/live/',
-    pullServer: 'http://ali.hlspull.yximgs.com/live/'
+    pushServer: 'rtmp://your-rtmp-server/live/'
   },
   database: {
     url: process.env.MONGODB_URI || 'mongodb://localhost:27017/ffstream'

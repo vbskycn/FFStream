@@ -1,89 +1,76 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import path from 'path';
-import config from '../config/default';
-import Stream from './models/stream.model';
 import ffmpegService from './services/ffmpeg.service';
+import storage from './services/storage.service';
 
 const app = express();
+
+console.log('初始化服务器...');
 
 // 中间件配置
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API 路由
-// 获取所有流
-app.get('/api/streams', async (req, res) => {
-  try {
-    const streams = await Stream.find();
-    res.json(streams);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message || '服务器错误' });
-  }
+app.get('/api/streams', (req, res) => {
+  console.log('获取所有流列表');
+  const streams = storage.getAllStreams();
+  res.json(streams);
 });
 
-// 添加新流
-app.post('/api/streams', async (req, res) => {
+app.post('/api/streams', (req, res) => {
   try {
-    const stream = new Stream(req.body);
-    await stream.save();
+    console.log('收到新建流请求:', req.body);
+    const stream = storage.addStream({
+      name: req.body.name,
+      inputUrl: req.body.inputUrl,
+      outputKey: req.body.outputKey,
+      status: 'stopped'
+    });
     res.status(201).json(stream);
   } catch (err: any) {
-    res.status(400).json({ error: err.message || '请求错误' });
+    console.error('创建流失败:', err);
+    res.status(400).json({ error: err.message });
   }
 });
 
-// 启动流
 app.post('/api/streams/:id/start', async (req, res) => {
   try {
-    const stream = await Stream.findById(req.params.id);
-    if (!stream) {
-      return res.status(404).json({ error: '流不存在' });
-    }
-    await ffmpegService.startStream(stream);
+    console.log('收到启动流请求:', req.params.id);
+    await ffmpegService.startStream(req.params.id);
     res.json({ message: '流已启动' });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || '服务器错误' });
+    console.error('启动流失败:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-// 停止流
 app.post('/api/streams/:id/stop', async (req, res) => {
   try {
-    const stream = await Stream.findById(req.params.id);
-    if (!stream) {
-      return res.status(404).json({ error: '流不存在' });
-    }
-    await ffmpegService.stopStream(stream.outputKey);
+    console.log('收到停止流请求:', req.params.id);
+    await ffmpegService.stopStream(req.params.id);
     res.json({ message: '流已停止' });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || '服务器错误' });
+    console.error('停止流失败:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-// 删除流
 app.delete('/api/streams/:id', async (req, res) => {
   try {
-    const stream = await Stream.findById(req.params.id);
-    if (!stream) {
-      return res.status(404).json({ error: '流不存在' });
-    }
-    await ffmpegService.stopStream(stream.outputKey);
-    await Stream.findByIdAndDelete(req.params.id);
+    console.log('收到删除流请求:', req.params.id);
+    await ffmpegService.stopStream(req.params.id);
+    storage.deleteStream(req.params.id);
     res.json({ message: '流已删除' });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || '服务器错误' });
+    console.error('删除流失败:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-// 连接数据库并启动服务器
-mongoose.connect(config.database.url)
-  .then(() => {
-    console.log('数据库连接成功');
-    app.listen(config.app.port, () => {
-      console.log(`服务器运行在 http://localhost:${config.app.port}`);
-    });
-  })
-  .catch((err: any) => {
-    console.error('数据库连接失败:', err.message);
-  }); 
+// 启动服务器
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`服务器运行在 http://localhost:${port}`);
+  console.log('服务器初始化完成');
+}); 
