@@ -39,7 +39,7 @@ class FFmpegService extends EventEmitter {
         console.log('命令行:', commandLine);
         storage.updateStream(stream.id, { 
           status: 'running',
-          lastError: null
+          lastError: undefined
         });
       })
       .on('error', (err) => {
