@@ -1,4 +1,4 @@
-declare module '*.js' {
+declare module '../config/default' {
   interface Config {
     app: {
       name: string;

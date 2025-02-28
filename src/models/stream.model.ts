@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { Schema, Document, model } from 'mongoose';
 
 export interface IStream extends Document {
   name: string;           // 流名称
@@ -37,4 +37,4 @@ const StreamSchema: Schema = new Schema({
   timestamps: true
 });
 
-export default mongoose.model<IStream>('Stream', StreamSchema); 
+export default model<IStream>('Stream', StreamSchema); 
